@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chat Emoji</title>
+</head>
+<script>
+	window.onload = function () {
+		let conn;
+		let nickname = document.getElementById('nickname');
+		let msg = document.getElementById('msg');
+		let log = document.getElementById('log');
+		let form = document.getElementById('form')
+		console.log(form)
+		function appendLog(msg) {
+			let d = document.createElement('div');
+			d.innerHTML = msg;
+			log.append(d);
+		}
+		form.onsubmit = function (evt) {
+			if (!conn)
+			{
+				return false;
+			}
+			if (!msg.value)
+			{
+				return false;
+			}
+			let data = { name: nickname.value, data: msg.value, time: new Date() };
+			let message = JSON.stringify(data)
+			conn.send(message);
+			msg.value = "";
+			msg.focus()
+			return false;
+		}
+		if (window["WebSocket"])
+		{
+			conn = new WebSocket(`ws://${document.location.host}/ws`);
+			conn.onclose = function (evt) {
+				appendLog("<b>Connection closed</b>");
+			}
+			conn.onmessage = function (evt) {
+				let data = JSON.parse(evt.data)
+				let currTime = new Date(data.time)
+				let hour = currTime.getHours()
+				let minute = currTime.getMinutes()
+				let second = currTime.getSeconds()
+				appendLog(`From: ${data.name} Time: ${hour}:${minute}:${second} Data: ${data.data}`);
+			}
+		}
+	}
+</script>
+
+<body>
+	<div id="log"></div>
+	<form id="form">
+		<input required type="text" id="nickname" placeholder="nickname">
+		<input type="text" id="msg" placeholder="message">
+		<button type="submit">Send</button>
+	</form>
+</body>
+
+</html>
